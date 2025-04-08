@@ -31,6 +31,7 @@ class Parser {
 
     private fun declaration(): Stmt? {
         try {
+            if (match(CLASS)) return classDeclaration()
             if (match(FUN)) return function("function")
             if (match(VAR)) return varDeclaration()
 
@@ -40,6 +41,19 @@ class Parser {
             synchronize()
             return null
         }
+    }
+
+    private fun classDeclaration():Stmt {
+        val name:Token = consume(IDENTIFIER, "Expect Class name.")
+        consume(LEFT_BRACE, "Expect '{' before class body.")
+
+        var methods:MutableList<Stmt.Function?> = ArrayList()
+        while((!check(RIGHT_BRACE)) && (!isAtEnd())) {
+            methods.add(function("method"))
+        }
+
+        consume(RIGHT_BRACE, "Expect '}' after class body.")
+        return Stmt.Class(name, methods)
     }
 
     private fun statement():Stmt {
@@ -208,6 +222,9 @@ class Parser {
             if(expr is Expr.Variable){
                 val name:Token = expr.name
                 return Expr.Assign(name, value)
+            } else if (expr is Expr.Get) {
+                val get:Expr.Get = expr
+                return Expr.Set(get.objec, get.name, value)
             }
 
             error(equals, "Invalid assignment target.")
@@ -342,6 +359,9 @@ class Parser {
         while(true){
             if(match(LEFT_PAREN)){
                 expr = finishCall(expr)
+            } else if (match(DOT)) {
+                val name:Token = consume(IDENTIFIER, "Expect property name after '.'.")
+                expr =Expr.Get(expr, name)
             } else break
         }
 
@@ -357,6 +377,7 @@ class Parser {
         if (match(NUMBER, STRING)) {
             return Expr.Literal(previous().literal)
         }
+        if (match(THIS)) return Expr.This(previous())
         if (match(IDENTIFIER)) {
             return Expr.Variable(previous())
         }

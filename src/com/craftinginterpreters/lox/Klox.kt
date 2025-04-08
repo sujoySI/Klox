@@ -78,6 +78,9 @@ class Klox {
             val resolver:Resolver = Resolver(interpreter)
             resolver.resolve(statements)
 
+            // Stop if there was a syntax error.
+            if (hadError) return
+
             interpreter.interpret(statements)
         }
         fun error(line: Int, message: String) {

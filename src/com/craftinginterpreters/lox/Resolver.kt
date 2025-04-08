@@ -5,10 +5,26 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
     private val interpreter:Interpreter
     // Basically Stack of map from string to boolean so instead of using push(), pop() or peek() use addLast(), removeLastOrNull() or last()
     private val scopes: ArrayDeque<MutableMap<String, Boolean>> = ArrayDeque()
+    private var currentFunction:FunctionType = FunctionType.NONE
 
     constructor(interpreter: Interpreter) {
         this.interpreter = interpreter
     }
+
+    private enum class FunctionType {
+        NONE,
+        FUNCTION,
+        INITIALIZER,
+        METHOD
+    }
+
+    private enum class ClassType {
+        NONE,
+        CLASS
+    }
+
+    private var currentClass:ClassType = ClassType.NONE
+
 
     fun resolve(statements:MutableList<Stmt?>) {
         for(statement in statements){
@@ -18,6 +34,8 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
         }
     }
 
+    //Stmt Visitors
+
     override fun visitBlockStmt(stmt: Stmt.Block): Unit? {
         beginScope()
         resolve(stmt.statements)
@@ -26,7 +44,19 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
     }
 
     override fun visitClassStmt(stmt: Stmt.Class): Unit? {
-        TODO("Not yet implemented")
+        val enclosingClass:ClassType = currentClass
+        currentClass = ClassType.CLASS
+        declare(stmt.name)
+        declare(stmt.name)
+        beginScope()
+        scopes.last().put("this", true)
+        for (method: Stmt.Function? in stmt.methods) {
+            val declaration:FunctionType = FunctionType.METHOD
+            resolveFunction(method!!, declaration)
+        }
+        endScope()
+        currentClass = enclosingClass
+        return null
     }
 
     override fun visitExpressionStmt(stmt: Stmt.Expression): Unit? {
@@ -38,7 +68,7 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
         declare(stmt.name)
         define(stmt.name)
 
-        resolveFunction(stmt)
+        resolveFunction(stmt, FunctionType.FUNCTION)
         return null
     }
 
@@ -55,6 +85,10 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
     }
 
     override fun visitReturnStmt(stmt: Stmt.Return): Unit? {
+        if (currentFunction == FunctionType.NONE) {
+            Klox.error(stmt.keyword, "Can't return from top-level code.")
+        }
+
         if (stmt.value != null) resolve(stmt.value)
         return null
     }
@@ -73,6 +107,8 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
         resolve(stmt.body)
         return null
     }
+
+    //Expr Visitors
 
     override fun visitAssignExpr(expr: Expr.Assign): Unit? {
         resolve(expr.value)
@@ -94,6 +130,11 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
         return null
     }
 
+    override fun visitGetExpr(expr: Expr.Get): Unit? {
+        resolve(expr.objec)
+        return null
+    }
+
     override fun visitGroupingExpr(expr: Expr.Grouping): Unit? {
         resolve(expr.expression)
         return null
@@ -106,6 +147,21 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
     override fun visitLogicalExpr(expr: Expr.Logical): Unit? {
         resolve(expr.left)
         resolve(expr.right)
+        return null
+    }
+
+    override fun visitSetExpr(expr: Expr.Set): Unit? {
+        resolve(expr.value)
+        resolve(expr.objec)
+        return null
+    }
+
+    override fun visitThisExpr(expr: Expr.This): Unit? {
+        if (currentClass == ClassType.NONE) {
+            Klox.error(expr.keyword, "Can't use 'this' outside of a class.")
+            return null
+        }
+        resolveLocal(expr,expr.keyword)
         return null
     }
 
@@ -134,7 +190,9 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
         expr?.accept(this)
     }
 
-    private fun resolveFunction(function: Stmt.Function) {
+    private fun resolveFunction(function: Stmt.Function, type:FunctionType) {
+        val enclosingFunction = currentFunction
+        currentFunction = type
         beginScope()
         for(param:Token in function.params) {
             declare(param)
@@ -142,6 +200,7 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
         }
         resolve(function.body)
         endScope()
+        currentFunction = enclosingFunction
     }
 
     private fun beginScope() {
@@ -156,6 +215,9 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
         if(scopes.isEmpty()) return
 
         var scope:MutableMap<String, Boolean> = scopes.last()
+        if (scope.containsKey(name.lexeme)) {
+            Klox.error(name, "Already a variable with this name in this scope.")
+        }
         scope.put(name.lexeme, false)
     }
 

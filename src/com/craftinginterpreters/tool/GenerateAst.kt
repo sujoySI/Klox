@@ -17,19 +17,22 @@ class GenerateAst {
         println(path)
         val outputDir:String = path.absolute().parent.toString()
         defineAst(outputDir, "Expr", mutableListOf(
-            /*  Splitting happens in "#"    , ", " , " " and ":" */
+            /*  Splitting happens in "#",   "* ",   " " and ":" */
             "Assign    # var name:Token,* var value:Expr ",
             "Binary    # var left:Expr,* var operator:Token,* var right:Expr ",
-            "Call      # var callee:Expr,* var paren:Token,* var arguments:MutableList<Expr>",
+            "Call      # var callee:Expr,* var paren:Token,* var arguments:MutableList<Expr> ",
+            "Get       # var objec:Expr,* var name:Token ",
             "Grouping  # var expression:Expr ",
             "Literal   # var value:Any? ",
-            "Logical   # var left:Expr,* var operator:Token,* var right:Expr",
+            "Logical   # var left:Expr,* var operator:Token,* var right:Expr ",
+            "Set       # var objec:Expr,* var name:Token,* var value:Expr ",
+            "This      # var keyword:Token ",
             "Unary     # var operator:Token,* var right:Expr ",
             "Variable  # var name:Token ",
             "Ternary   # var condition:Expr,* var thenBranch:Expr,* var elseBranch:Expr "
         ))
         defineAst(outputDir, "Stmt", mutableListOf(
-            /*  Splitting happens in "#",   "* ",   " " and     ":" */
+            /*  Splitting happens in "#",   "* ",   " " and ":" */
             "Block      # var statements:MutableList<Stmt?> ",
             "Class      # var name:Token,* var methods:MutableList<Stmt.Function?> ",
             "Expression # var expression:Expr ",

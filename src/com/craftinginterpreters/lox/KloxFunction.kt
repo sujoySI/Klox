@@ -2,11 +2,19 @@ package com.craftinginterpreters.lox
 
 class KloxFunction :KloxCallable {
     private var declaration: Stmt.Function
+    private var isInitializer:Boolean
     private var closure: Environment
 
-    constructor(declaration: Stmt.Function, closure: Environment) {
+    constructor(declaration: Stmt.Function, closure: Environment, isInitializer:Boolean) {
+        this.isInitializer = isInitializer
         this.closure = closure
         this.declaration = declaration
+    }
+
+    fun bind(instance:KloxInstance):KloxFunction{
+        val environment:Environment = Environment(closure)
+        environment.define("this", instance)
+        return KloxFunction(declaration, environment, isInitializer)
     }
 
     override fun arity(): Int = declaration.params.size
@@ -24,6 +32,7 @@ class KloxFunction :KloxCallable {
         } catch (returnValue:Return) {
             return returnValue.value
         }
+        if(isInitializer) return closure.getAt(0, "this")
         return null
     }
 

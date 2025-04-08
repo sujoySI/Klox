@@ -1,7 +1,6 @@
 package com.craftinginterpreters.lox
 
 import com.craftinginterpreters.lox.TokenType.*
-import kotlin.jvm.Throws
 
 class Interpreter: Expr.Visitor<Any?>, Stmt.Visitor<Unit?> {
 
@@ -34,6 +33,8 @@ class Interpreter: Expr.Visitor<Any?>, Stmt.Visitor<Unit?> {
             Klox.runtimeError(error)
         }
     }
+
+    //Expr Visitors
 
     override fun visitAssignExpr(expr: Expr.Assign): Any? {
         val value:Any? = evaluate(expr.value)
@@ -116,6 +117,15 @@ class Interpreter: Expr.Visitor<Any?>, Stmt.Visitor<Unit?> {
         return function.call(this, arguments)
     }
 
+    override fun visitGetExpr(expr: Expr.Get): Any? {
+        val objec:Any? = evaluate(expr.objec)
+        if (objec is KloxInstance)
+        {
+            return objec.get(expr.name)
+        }
+        throw RuntimeError(expr.name, "Only instances have properties.")
+    }
+
     override fun visitGroupingExpr(expr: Expr.Grouping): Any? {
         return evaluate(expr.expression)
     }
@@ -134,6 +144,22 @@ class Interpreter: Expr.Visitor<Any?>, Stmt.Visitor<Unit?> {
             if (!isTruthy(left)) return left
         }
         return evaluate(expr.right)
+    }
+
+    override fun visitSetExpr(expr: Expr.Set): Any? {
+        val objec:Any? = evaluate(expr.objec)
+
+        if (objec !is KloxInstance) {
+            throw RuntimeError(expr.name, "Only instances have fields.")
+        }
+
+        val value:Any? = evaluate(expr.value)
+        (objec as KloxInstance).set(expr.name, value)
+        return value
+    }
+
+    override fun visitThisExpr(expr: Expr.This): Any? {
+        return lookUpVariable(expr.keyword, expr)
     }
 
     override fun visitUnaryExpr(expr: Expr.Unary): Any? {
@@ -235,13 +261,23 @@ class Interpreter: Expr.Visitor<Any?>, Stmt.Visitor<Unit?> {
         }
     }
 
+    //Stmt Visitors
+
     override fun visitBlockStmt(stmt: Stmt.Block): Unit? {
         executeBlock(stmt.statements, Environment(environment))
         return null
     }
 
     override fun visitClassStmt(stmt: Stmt.Class): Unit? {
-        TODO("Not yet implemented")
+        environment.define(stmt.name.lexeme, null)
+        var methods:MutableMap<String, KloxFunction> = HashMap()
+        for (method in stmt.methods) {
+            var function:KloxFunction = KloxFunction(method!!, environment, method.name.lexeme.equals("init"))
+            methods.put(method.name.lexeme, function)
+        }
+        val klass:KloxClass = KloxClass(stmt.name.lexeme, methods)
+        environment.assign(stmt.name, klass)
+        return null
     }
 
     override fun visitExpressionStmt(stmt: Stmt.Expression): Unit? {
@@ -250,7 +286,7 @@ class Interpreter: Expr.Visitor<Any?>, Stmt.Visitor<Unit?> {
     }
 
     override fun visitFunctionStmt(stmt: Stmt.Function): Unit? {
-        val function:KloxFunction = KloxFunction(stmt, environment)
+        val function:KloxFunction = KloxFunction(stmt, environment, false)
         environment.define(stmt.name.lexeme, function)
         return null
     }
@@ -292,6 +328,4 @@ class Interpreter: Expr.Visitor<Any?>, Stmt.Visitor<Unit?> {
         }
         return null
     }
-
-
 }

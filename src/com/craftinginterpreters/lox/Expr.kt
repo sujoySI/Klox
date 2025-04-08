@@ -5,9 +5,12 @@ sealed class Expr {
 		fun visitAssignExpr(expr:Assign):R
 		fun visitBinaryExpr(expr:Binary):R
 		fun visitCallExpr(expr:Call):R
+		fun visitGetExpr(expr:Get):R
 		fun visitGroupingExpr(expr:Grouping):R
 		fun visitLiteralExpr(expr:Literal):R
 		fun visitLogicalExpr(expr:Logical):R
+		fun visitSetExpr(expr:Set):R
+		fun visitThisExpr(expr:This):R
 		fun visitUnaryExpr(expr:Unary):R
 		fun visitVariableExpr(expr:Variable):R
 		fun visitTernaryExpr(expr:Ternary):R
@@ -28,6 +31,11 @@ sealed class Expr {
 			return visitor.visitCallExpr(this)
 		}
 	}
+	data class Get( var objec:Expr, var name:Token ):Expr() {
+		override fun <R> accept(visitor:Visitor<R>):R{
+			return visitor.visitGetExpr(this)
+		}
+	}
 	data class Grouping( var expression:Expr ):Expr() {
 		override fun <R> accept(visitor:Visitor<R>):R{
 			return visitor.visitGroupingExpr(this)
@@ -41,6 +49,16 @@ sealed class Expr {
 	data class Logical( var left:Expr, var operator:Token, var right:Expr ):Expr() {
 		override fun <R> accept(visitor:Visitor<R>):R{
 			return visitor.visitLogicalExpr(this)
+		}
+	}
+	data class Set( var objec:Expr, var name:Token, var value:Expr ):Expr() {
+		override fun <R> accept(visitor:Visitor<R>):R{
+			return visitor.visitSetExpr(this)
+		}
+	}
+	data class This( var keyword:Token ):Expr() {
+		override fun <R> accept(visitor:Visitor<R>):R{
+			return visitor.visitThisExpr(this)
 		}
 	}
 	data class Unary( var operator:Token, var right:Expr ):Expr() {

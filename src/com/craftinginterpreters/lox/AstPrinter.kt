@@ -25,6 +25,10 @@ class AstPrinter:Expr.Visitor<String> {
         return " "
     }
 
+    override fun visitGetExpr(expr: Expr.Get): String {
+        return " "
+    }
+
     override fun visitGroupingExpr(expr: Expr.Grouping): String {
         return  parenthesize("group", expr.expression)
     }
@@ -36,6 +40,14 @@ class AstPrinter:Expr.Visitor<String> {
 
     override fun visitLogicalExpr(expr: Expr.Logical): String {
         return ""
+    }
+
+    override fun visitSetExpr(expr: Expr.Set): String {
+        return " "
+    }
+
+    override fun visitThisExpr(expr: Expr.This): String {
+        return " "
     }
 
     override fun visitUnaryExpr(expr: Expr.Unary): String {

@@ -1,6 +1,27 @@
 package com.craftinginterpreters.lox
 
 import  com.craftinginterpreters.lox.TokenType.*
+import kotlin.system.exitProcess
+
+
+
+private fun report(line: Int, wheere: String, message: String) {
+    System.err.println("Scanner : Error$wheere[Line $line]:$message")
+    exitProcess(64);
+}
+
+private fun error(token: Token, message: String ) {
+    if(token.type == TokenType.EOF) {
+        report(token.line, " at end", message)
+    }
+    else {
+        report(token.line, " at ", message)
+    }
+}
+
+private fun error(line: Int, message: String) {
+    report(line, "", message)
+}
 
 class Scanner(private var source: String) {
 
@@ -88,7 +109,7 @@ class Scanner(private var source: String) {
                         if((peek() == '*') && (peekNext() == '/')) break;
                         if(advance() == '\n') line++
                         if(peek() == 0.toChar()){
-                            Klox.error(line, "Missing the end of multiline comment '*/'")
+                            error(line, "Missing the end of multiline comment '*/'")
                         }
                     }
                     advance()
@@ -111,7 +132,7 @@ class Scanner(private var source: String) {
                     identifier()
                 }
                 else {
-                    Klox.error(line, "Unexpected character. $c")
+                    error(line, "Unexpected character. $c")
                 }
             }
         }
@@ -147,7 +168,7 @@ class Scanner(private var source: String) {
         }
 
         if (isAtEnd()) {
-            Klox.error(line, "Unterminated string.")
+            error(line, "Unterminated string.")
             return
         }
 

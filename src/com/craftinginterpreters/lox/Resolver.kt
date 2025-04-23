@@ -1,5 +1,7 @@
 package com.craftinginterpreters.lox
 
+import kotlin.system.exitProcess
+
 
 class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
     private val interpreter:Interpreter
@@ -47,7 +49,7 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
         val enclosingClass:ClassType = currentClass
         currentClass = ClassType.CLASS
         declare(stmt.name)
-        declare(stmt.name)
+        define(stmt.name)
         beginScope()
         scopes.last().put("this", true)
         for (method: Stmt.Function? in stmt.methods) {
@@ -86,7 +88,7 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
 
     override fun visitReturnStmt(stmt: Stmt.Return): Unit? {
         if (currentFunction == FunctionType.NONE) {
-            Klox.error(stmt.keyword, "Can't return from top-level code.")
+            error(stmt.keyword, "Can't return from top-level code.")
         }
 
         if (stmt.value != null) resolve(stmt.value)
@@ -158,7 +160,7 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
 
     override fun visitThisExpr(expr: Expr.This): Unit? {
         if (currentClass == ClassType.NONE) {
-            Klox.error(expr.keyword, "Can't use 'this' outside of a class.")
+            error(expr.keyword, "Can't use 'this' outside of a class.")
             return null
         }
         resolveLocal(expr,expr.keyword)
@@ -172,7 +174,7 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
 
     override fun visitVariableExpr(expr: Expr.Variable): Unit? {
         if ((!scopes.isEmpty()) && (scopes.last().get(expr.name.lexeme) == "false".toBoolean())) {
-            Klox.error(expr.name, "Can't read local variable in its own initializer.")
+            error(expr.name, "Can't read local variable in its own initializer.")
         }
         resolveLocal(expr, expr.name)
         return null
@@ -214,9 +216,9 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
     private fun declare(name:Token) {
         if(scopes.isEmpty()) return
 
-        var scope:MutableMap<String, Boolean> = scopes.last()
+        val scope:MutableMap<String, Boolean> = scopes.last()
         if (scope.containsKey(name.lexeme)) {
-            Klox.error(name, "Already a variable with this name in this scope.")
+            error(name, "Already a variable with this name in this scope.")
         }
         scope.put(name.lexeme, false)
     }
@@ -235,6 +237,20 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
                 return
             }
             i--
+        }
+    }
+
+    private fun report(line: Int, wheere: String, message: String) {
+        System.err.println("Resolver: Error$wheere[Line $line]:$message")
+        exitProcess(56)
+    }
+
+    fun error(token: Token, message: String ) {
+        if(token.type == TokenType.EOF) {
+            report(token.line, " at end", message)
+        }
+        else {
+            report(token.line, " at ", message)
         }
     }
 }

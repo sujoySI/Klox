@@ -1,6 +1,7 @@
 package com.craftinginterpreters.lox
 
 import com.craftinginterpreters.lox.TokenType.*
+import kotlin.system.exitProcess
 
 class Interpreter: Expr.Visitor<Any?>, Stmt.Visitor<Unit?> {
 
@@ -22,6 +23,11 @@ class Interpreter: Expr.Visitor<Any?>, Stmt.Visitor<Unit?> {
         })
     }
 
+    private fun runtimeError(error: RuntimeError) {
+        System.err.println("${error.message}\n[line ${error.token.line}]")
+        exitProcess(84)
+    }
+
     fun interpret(statements:MutableList<Stmt?>) {
         try {
             for (statement in statements){
@@ -30,7 +36,7 @@ class Interpreter: Expr.Visitor<Any?>, Stmt.Visitor<Unit?> {
                 }
             }
         } catch (error: RuntimeError) {
-            Klox.runtimeError(error)
+            runtimeError(error)
         }
     }
 

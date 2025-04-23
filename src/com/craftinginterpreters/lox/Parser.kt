@@ -1,6 +1,7 @@
 package com.craftinginterpreters.lox
 
 import com.craftinginterpreters.lox.TokenType.*
+import kotlin.system.exitProcess
 
 
 class Parser {
@@ -426,8 +427,19 @@ class Parser {
         return tokens[current - 1]
     }
 
+    private fun report(line: Int, wheere: String, message: String) {
+        System.err.println("Parser: Error$wheere[Line $line]:$message")
+        exitProcess(78)
+    }
+
+
     private fun error(token:Token, message: String):ParseError {
-        Klox.error(token, message)
+        if(token.type == TokenType.EOF) {
+            report(token.line, " at end", message)
+        }
+        else {
+            report(token.line, " at ", message)
+        }
         return ParseError()
     }
 

@@ -3,7 +3,6 @@ package com.craftinginterpreters.lox
 import com.craftinginterpreters.lox.TokenType.*
 import kotlin.system.exitProcess
 
-
 class Parser {
     companion object{
         private class ParseError:RuntimeException()
@@ -46,15 +45,20 @@ class Parser {
 
     private fun classDeclaration():Stmt {
         val name:Token = consume(IDENTIFIER, "Expect Class name.")
+        var superclass:Expr.Variable? = null
+        if(match(LESS)){
+            consume(IDENTIFIER, "Expect superclass name")
+            superclass = Expr.Variable(previous())
+        }
         consume(LEFT_BRACE, "Expect '{' before class body.")
 
-        var methods:MutableList<Stmt.Function?> = ArrayList()
+        val methods:MutableList<Stmt.Function?> = ArrayList()
         while((!check(RIGHT_BRACE)) && (!isAtEnd())) {
             methods.add(function("method"))
         }
 
         consume(RIGHT_BRACE, "Expect '}' after class body.")
-        return Stmt.Class(name, methods)
+        return Stmt.Class(name, superclass, methods)
     }
 
     private fun statement():Stmt {
@@ -377,6 +381,12 @@ class Parser {
 
         if (match(NUMBER, STRING)) {
             return Expr.Literal(previous().literal)
+        }
+        if (match(SUPER)) {
+            var keyword:Token = previous()
+            consume(DOT, "Expect '.' after 'super'.")
+            var method = consume(IDENTIFIER, "Expect superclass method name.")
+            return Expr.Super(keyword, method)
         }
         if (match(THIS)) return Expr.This(previous())
         if (match(IDENTIFIER)) {

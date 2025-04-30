@@ -1,7 +1,7 @@
 package com.craftinginterpreters.lox
 
 class KloxInstance {
-    private lateinit var klass:KloxClass
+    private var klass:KloxClass
     private val fields:MutableMap<String, Any?> = HashMap()
 
     constructor(klass:KloxClass) {

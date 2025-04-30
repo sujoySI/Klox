@@ -18,7 +18,7 @@ sealed class Stmt {
 			return visitor.visitBlockStmt(this)
 		}
 	}
-	data class Class( var name:Token, var methods:MutableList<Stmt.Function?> ):Stmt() {
+	data class Class( var name:Token, var superclass:Expr.Variable?, var methods:MutableList<Stmt.Function?> ):Stmt() {
 		override fun <R> accept(visitor:Visitor<R>):R{
 			return visitor.visitClassStmt(this)
 		}

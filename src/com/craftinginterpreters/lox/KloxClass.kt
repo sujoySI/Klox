@@ -1,18 +1,25 @@
 package com.craftinginterpreters.lox
 
+import java.lang.classfile.Superclass
+
 class KloxClass:KloxCallable {
 
     var name: String
+    var superclass: KloxClass
     private var methods:MutableMap<String, KloxFunction>
 
-    constructor(name: String, methods:MutableMap<String, KloxFunction>) {
+    constructor(name: String, superclass: KloxClass, methods:MutableMap<String, KloxFunction>) {
         this.name = name
+        this.superclass = superclass
         this.methods = methods
     }
 
     fun findMethod(name: String):KloxFunction? {
         if (methods.containsKey(name)) {
             return methods.get(name)
+        }
+        if (superclass != null) {
+            return superclass.findMethod(name)
         }
         return null
     }

@@ -39,6 +39,10 @@ class RPNVisitor: Expr.Visitor<String> {
         return " "
     }
 
+    override fun visitSuperExpr(expr: Expr.Super): String {
+        return " "
+    }
+
     override fun visitThisExpr(expr: Expr.This): String {
         return " "
     }

@@ -26,6 +26,7 @@ class GenerateAst {
             "Literal   # var value:Any? ",
             "Logical   # var left:Expr,* var operator:Token,* var right:Expr ",
             "Set       # var objec:Expr,* var name:Token,* var value:Expr ",
+            "Super     # var keyword:Token,* var method:Token ",
             "This      # var keyword:Token ",
             "Unary     # var operator:Token,* var right:Expr ",
             "Variable  # var name:Token ",
@@ -34,7 +35,7 @@ class GenerateAst {
         defineAst(outputDir, "Stmt", mutableListOf(
             /*  Splitting happens in "#",   "* ",   " " and ":" */
             "Block      # var statements:MutableList<Stmt?> ",
-            "Class      # var name:Token,* var methods:MutableList<Stmt.Function?> ",
+            "Class      # var name:Token,* var superclass:Expr.Variable?,* var methods:MutableList<Stmt.Function?> ",
             "Expression # var expression:Expr ",
             "Function   # var name:Token,* var params:MutableList<Token>,* var body:MutableList<Stmt?> ",
             "If         # var condition:Expr,* var thenBranch:Stmt?,* var elseBranch:Stmt? ",

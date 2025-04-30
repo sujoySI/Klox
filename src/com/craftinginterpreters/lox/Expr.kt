@@ -10,6 +10,7 @@ sealed class Expr {
 		fun visitLiteralExpr(expr:Literal):R
 		fun visitLogicalExpr(expr:Logical):R
 		fun visitSetExpr(expr:Set):R
+		fun visitSuperExpr(expr:Super):R
 		fun visitThisExpr(expr:This):R
 		fun visitUnaryExpr(expr:Unary):R
 		fun visitVariableExpr(expr:Variable):R
@@ -54,6 +55,11 @@ sealed class Expr {
 	data class Set( var objec:Expr, var name:Token, var value:Expr ):Expr() {
 		override fun <R> accept(visitor:Visitor<R>):R{
 			return visitor.visitSetExpr(this)
+		}
+	}
+	data class Super( var keyword:Token, var method:Token ):Expr() {
+		override fun <R> accept(visitor:Visitor<R>):R{
+			return visitor.visitSuperExpr(this)
 		}
 	}
 	data class This( var keyword:Token ):Expr() {

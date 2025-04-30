@@ -40,7 +40,7 @@ class Environment {
         values[name] = value
     }
 
-    fun getAt(distance:Int, name:String):Any? {
+    fun getAt(distance: Int?, name: String):Any? {
         return ancestor(distance).values.get(name)
     }
 
@@ -48,12 +48,14 @@ class Environment {
         ancestor(distance).values.put(name.lexeme, value)
     }
 
-    fun ancestor(distance: Int):Environment {
+    fun ancestor(distance: Int?):Environment {
         var environment:Environment = this
         var i = 0
-        while (i<distance){
-            environment = environment.enclosing!!
-            i++
+        distance?.let {
+            while (i<it){
+                environment = environment.enclosing!!
+                i++
+            }
         }
         return environment
     }

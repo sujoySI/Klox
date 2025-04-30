@@ -30,6 +30,7 @@ class KloxFunction :KloxCallable {
         try {
             interpreter?.executeBlock(declaration.body, environment)
         } catch (returnValue:Return) {
+            if (isInitializer) return closure.getAt(0, "this")
             return returnValue.value
         }
         if(isInitializer) return closure.getAt(0, "this")

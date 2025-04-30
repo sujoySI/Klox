@@ -164,6 +164,19 @@ class Interpreter: Expr.Visitor<Any?>, Stmt.Visitor<Unit?> {
         return value
     }
 
+    override fun visitSuperExpr(expr: Expr.Super): Any? {
+        val distance: Int? = locals.get(expr)
+        val superclass: KloxClass = environment.getAt(distance, "super") as KloxClass
+        val objec: KloxInstance = environment.getAt(distance?.minus(1), "this") as KloxInstance
+        val method: KloxFunction? = superclass.findMethod(expr.method.lexeme)
+
+        if (method == null) {
+            throw RuntimeError(expr.method, "Undefined property ${expr.method.lexeme}.")
+        }
+
+        return method?.bind(objec)
+    }
+
     override fun visitThisExpr(expr: Expr.This): Any? {
         return lookUpVariable(expr.keyword, expr)
     }
@@ -275,13 +288,31 @@ class Interpreter: Expr.Visitor<Any?>, Stmt.Visitor<Unit?> {
     }
 
     override fun visitClassStmt(stmt: Stmt.Class): Unit? {
+        var superclass: Any? = null
+        if(stmt.superclass != null) {
+            superclass = evaluate(stmt.superclass!!)
+            if(superclass !is KloxClass) {
+                throw RuntimeError(stmt.superclass!!.name, "Superclass must be a class.")
+            }
+        }
         environment.define(stmt.name.lexeme, null)
-        var methods:MutableMap<String, KloxFunction> = HashMap()
+
+        if (stmt.superclass != null) {
+            environment = Environment(environment)
+            environment.define("super", superclass)
+        }
+
+        val methods:MutableMap<String, KloxFunction> = HashMap()
         for (method in stmt.methods) {
-            var function:KloxFunction = KloxFunction(method!!, environment, method.name.lexeme.equals("init"))
+            val function:KloxFunction = KloxFunction(method!!, environment, method.name.lexeme.equals("init"))
             methods.put(method.name.lexeme, function)
         }
-        val klass:KloxClass = KloxClass(stmt.name.lexeme, methods)
+        val klass:KloxClass = KloxClass(stmt.name.lexeme, superclass as KloxClass, methods)
+
+        if  (superclass != null) {
+            environment = environment.enclosing!!
+        }
+
         environment.assign(stmt.name, klass)
         return null
     }

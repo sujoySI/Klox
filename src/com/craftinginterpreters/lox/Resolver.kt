@@ -22,7 +22,8 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
 
     private enum class ClassType {
         NONE,
-        CLASS
+        CLASS,
+        SUBCLASS
     }
 
     private var currentClass:ClassType = ClassType.NONE
@@ -50,13 +51,29 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
         currentClass = ClassType.CLASS
         declare(stmt.name)
         define(stmt.name)
+
+        if(stmt.superclass != null && stmt.superclass!!.name.lexeme.equals(stmt.superclass!!.name.lexeme)){
+            error(stmt.superclass!!.name, "A class can't inherit from itself.")
+        }
+        if(stmt.superclass != null) {
+            currentClass = ClassType.SUBCLASS
+            resolve(stmt.superclass)
+        }
+        if(stmt.superclass != null) {
+            beginScope()
+            scopes.last().put("super", true)
+        }
         beginScope()
         scopes.last().put("this", true)
         for (method: Stmt.Function? in stmt.methods) {
-            val declaration:FunctionType = FunctionType.METHOD
+            var declaration:FunctionType = FunctionType.METHOD
+            if(method?.name?.lexeme.equals("init")) {
+                declaration = FunctionType.INITIALIZER
+            }
             resolveFunction(method!!, declaration)
         }
         endScope()
+        if (stmt.superclass != null) endScope()
         currentClass = enclosingClass
         return null
     }
@@ -91,7 +108,12 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
             error(stmt.keyword, "Can't return from top-level code.")
         }
 
-        if (stmt.value != null) resolve(stmt.value)
+        if (stmt.value != null) {
+            if(currentFunction == FunctionType.INITIALIZER) {
+                error(stmt.keyword, "Can't return a value from an initializer.")
+            }
+            resolve(stmt.value)
+        }
         return null
     }
 
@@ -155,6 +177,16 @@ class Resolver: Expr.Visitor<Unit?> , Stmt.Visitor<Unit?> {
     override fun visitSetExpr(expr: Expr.Set): Unit? {
         resolve(expr.value)
         resolve(expr.objec)
+        return null
+    }
+
+    override fun visitSuperExpr(expr: Expr.Super): Unit? {
+        if (currentClass == ClassType.NONE) {
+            error(expr.keyword, "Can't use 'super' outside of a class.")
+        } else if (currentClass != ClassType.SUBCLASS) {
+            error(expr.keyword, "Can't use 'super' in a class with no superclass.")
+        }
+        resolveLocal( expr, expr.keyword)
         return null
     }
 

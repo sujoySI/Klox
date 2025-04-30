@@ -174,7 +174,7 @@ class Interpreter: Expr.Visitor<Any?>, Stmt.Visitor<Unit?> {
             throw RuntimeError(expr.method, "Undefined property ${expr.method.lexeme}.")
         }
 
-        return method?.bind(objec)
+        return method.bind(objec)
     }
 
     override fun visitThisExpr(expr: Expr.This): Any? {

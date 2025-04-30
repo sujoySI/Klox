@@ -7,7 +7,7 @@ import kotlin.system.exitProcess
 
 class GenerateAst {
     @Throws
-    public fun main(args: Array<String>) {
+    fun main(args: Array<String>) {
         if( args.size != 1) {
             error("Usage: generate_ast <output directory>")
             @Suppress("UNREACHABLE_CODE")

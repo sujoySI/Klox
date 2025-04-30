@@ -1,7 +1,5 @@
 package com.craftinginterpreters.lox
 
-import java.lang.classfile.Superclass
-
 class KloxClass:KloxCallable {
 
     var name: String

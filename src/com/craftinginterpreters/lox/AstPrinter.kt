@@ -1,7 +1,5 @@
 package com.craftinginterpreters.lox
 
-import com.craftinginterpreters.tool.GenerateAst
-
 class AstPrinter:Expr.Visitor<String> {
 
     fun print(expr:Expr):String{

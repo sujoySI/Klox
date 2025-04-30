@@ -7,11 +7,11 @@ import kotlin.system.exitProcess
 
 private fun report(line: Int, wheere: String, message: String) {
     System.err.println("Scanner : Error$wheere[Line $line]:$message")
-    exitProcess(64);
+    exitProcess(64)
 }
 
 private fun error(token: Token, message: String ) {
-    if(token.type == TokenType.EOF) {
+    if(token.type == EOF) {
         report(token.line, " at end", message)
     }
     else {
@@ -106,7 +106,7 @@ class Scanner(private var source: String) {
                 else if (match('*')) {
                     /* A multiline comment goes till the '*' and '/' */
                     while (true) {
-                        if((peek() == '*') && (peekNext() == '/')) break;
+                        if((peek() == '*') && (peekNext() == '/')) break
                         if(advance() == '\n') line++
                         if(peek() == 0.toChar()){
                             error(line, "Missing the end of multiline comment '*/'")
@@ -172,7 +172,7 @@ class Scanner(private var source: String) {
             return
         }
 
-        //The Closing ".
+        //The Closing.
         advance()
 
         //Trim the surrounding quotes.

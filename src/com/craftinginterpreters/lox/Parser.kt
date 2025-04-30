@@ -106,7 +106,7 @@ class Parser {
         body = Stmt.While(condition, body)
 
         if (initializer != null) {
-            body = Stmt.Block(mutableListOf(initializer, body));
+            body = Stmt.Block(mutableListOf(initializer, body))
         }
 
         return body
@@ -117,7 +117,7 @@ class Parser {
         val condition:Expr = expression()
         consume(RIGHT_PAREN, "Expect ')' after 'if' condition.")
 
-        var thenBranch:Stmt? = statement()
+        val thenBranch:Stmt? = statement()
         var elseBranch:Stmt? = null
         if (match(ELSE)) {
             elseBranch = statement()
@@ -383,9 +383,9 @@ class Parser {
             return Expr.Literal(previous().literal)
         }
         if (match(SUPER)) {
-            var keyword:Token = previous()
+            val keyword:Token = previous()
             consume(DOT, "Expect '.' after 'super'.")
-            var method = consume(IDENTIFIER, "Expect superclass method name.")
+            val method = consume(IDENTIFIER, "Expect superclass method name.")
             return Expr.Super(keyword, method)
         }
         if (match(THIS)) return Expr.This(previous())
@@ -444,7 +444,7 @@ class Parser {
 
 
     private fun error(token:Token, message: String):ParseError {
-        if(token.type == TokenType.EOF) {
+        if(token.type == EOF) {
             report(token.line, " at end", message)
         }
         else {
